@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz App</title>
+  <style>
+    /* Celebration Modal */
+    .celebration-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.2);
+      z-index: 1001;
+      max-width: 90%;
+      width: 400px;
+      animation: modalAppear 0.5s ease-out;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    @keyframes modalAppear {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .celebration-modal h2 {
+      color: #6c63ff;
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+
+    .celebration-modal p {
+      color: #555;
+      margin-bottom: 30px;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .celebration-emoji {
+      font-size: 60px;
+      margin-bottom: 20px;
+      display: block;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    /* Confetti styles */
+    .confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #f00;
+      opacity: 0;
+      animation: confetti 5s ease-in-out forwards;
+    }
+
+    @keyframes confetti {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* Prevent text selection and highlighting */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      -webkit-user-select: none; /* Safari */
+      -ms-user-select: none; /* IE 10 and IE 11 */
+      user-select: none; /* Standard syntax */
+    }
+    
+    /* Allow selection in input fields */
+    input, textarea {
+      -webkit-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+    }
+
+    body {
+      background: #f5f7fa;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      gap: 20px;
+    }
+
+    /* Quiz Container */
+    .quiz-container {
+      flex: 1;
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 5px 20px rgba(133, 30, 30, 0.1);
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .qIndex {
+      font-size: 18px;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+    }
+
+    .stats span {
+      font-size: 16px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    /* Question */
+    .question-box {
+      margin-bottom: 30px;
+    }
+
+    .question {
+      font-size: 22px;
+      color: #2c3e50;
+      line-height: 1.5;
+      margin-bottom: 25px;
+      cursor: default;
+      -webkit-touch-callout: none; /* iOS Safari */
+    }
+
+    /* Options */
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 25px;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .option-container {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .option-container:hover {
+      border-color: #3498db;
+    }
+
+    .optBtn {
+      width: 100%;
+      padding: 15px 20px;
+      border: none;
+      background: none;
+      text-align: left;
+      font-size: 16px;
+      color: #34495e;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    /* Status */
+    .status {
+      min-height: 30px;
+      margin: 15px 0;
+      font-size: 16px;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* Next Button */
+    .next-btn {
+      display: block;
+      width: 200px;
+      margin: 30px auto 0;
+      padding: 12px 25px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .next-btn:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+    }
+
+    .next-btn:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Player Info */
+    .player-info {
+      width: 280px;
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      align-self: flex-start;
+    }
+
+    .player-avatar {
+      width: 80px;
+      height: 80px;
+      background: #3498db;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 600;
+      margin: 0 auto 15px;
+    }
+
+    .player-name {
+      font-size: 18px;
+      color: #2c3e50;
+      font-weight: 600;
+      margin-bottom: 25px;
+    }
+
+    .player-stats {
+      text-align: left;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .stat-label {
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+
+    .stat-value {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    /* Login Box */
+    .login-box {
+      background: white;
+      max-width: 400px;
+      width: 100%;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .login-box h2 {
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #2c3e50;
+      font-weight: 500;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    .login-input:focus {
+      border-color: #3498db;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background-color: #2980b9;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+
+    .login-btn:hover {
+      background: #2980b9;
+    
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+    }
+
+    /* Answer States */
+    .correct {
+      background: #85da8c !important;
+      border-color: #4caf50 !important;
+    }
+
+    .correct .optBtn {
+      color: #2e7d32 !important;
+    }
+
+    .wrong {
+      background: #d75266 !important;
+      border-color: #f44336 !important;
+    }
+
+    .wrong .optBtn {
+      color: #948c8c !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Box -->
+  <div class="login-box" id="loginBox">
+    <h2>Welcome to Login Page</h2>
+    <div class="form-group">
+      <label for="username">Your Name</label>
+      <input type="text" id="username" class="login-input" placeholder="Enter your name" required>
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" class="login-input" placeholder="Enter password" required>
+    </div>
+    <button class="login-btn" onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <!-- Quiz Box (initially hidden) -->
+  <div class="container" id="quizBox" style="display: none;">
+    <div class="quiz-container">
+      <div class="header">
+        <div class="qIndex" id="qIndex">Q 1 of 10</div>
+        <div class="stats">
+          <div class="timer-container">
+            <svg class="progress-ring" width="60" height="60">
+              <circle class="progress-ring__circle" stroke="#3498db" stroke-width="4" fill="transparent" r="25" cx="30" cy="30"/>
+            </svg>
+            <div class="timer" id="timer">20s</div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <span>Score: <span id="score">0</span>/<span id="totalQuestions">10</span></span>
+            <span id="scorePercentage">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="question-box">
+        <div class="question" id="questionText">Question text goes here</div>
+        <div class="options" id="options">
+          <!-- Options will be added here by JavaScript -->
+        </div>
+        <div class="status" id="statusText"></div>
+        <button class="next-btn" id="nextBtn" style="display: none;" onclick="nextQuestion()">Next Question</button>
+      </div>
+    </div>
+    
+    <div class="player-info">
+      <div class="player-avatar" id="playerInitial">U</div>
+      <div class="player-name" id="playerName">Player</div>
+      <div class="player-stats">
+        <div class="stat-item">
+          <span class="stat-label">Questions</span>
+          <span class="stat-value" id="totalQuestions">0/10</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Correct</span>
+          <span class="stat-value" id="correctAnswers">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Wrong</span>
+          <span class="stat-value" id="wrongAnswers">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Score</span>
+          <span class="stat-value" id="playerScore">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const QUESTIONS = [
+{ q: "Which tag is used to create a hyperlink in HTML?", opts: ["<a>", "<link>", "<href>", "<url>"], a: 0 },
+  { q: "Which CSS property changes text color?", opts: ["background-color", "font-color", "color", "text-color"], a: 2 },
+  { q: "Inside which HTML element do we put JavaScript?", opts: ["<js>", "<script>", "<javascript>", "<code>"], a: 1 },
+  { q: "Which attribute gives unique identity to an HTML element?", opts: ["class", "name", "id", "style"], a: 2 },
+  { q: "Which CSS property controls text size?", opts: ["font-size", "text-size", "size", "text-style"], a: 0 },
+  { q: "Which symbol is used for comments in CSS?", opts: ["// comment", "# comment", "/* comment */", "<!-- comment -->"], a: 2 },
+  { q: "Which HTML element defines the largest heading?", opts: ["<h1>", "<heading>", "<h6>", "<head>"], a: 0 },
+  { q: "Which HTML attribute specifies alternative text for an image?", opts: ["alt", "title", "src", "longdesc"], a: 0 },
+  { q: "Which property makes text bold in CSS?", opts: ["text-weight", "bold", "font-weight", "style"], a: 2 },
+  { q: "Which input type is used for a password field?", opts: ["text", "password", "secret", "hidden"], a: 1 },
+  { q: "Which CSS position makes an element “stick” when scrolling?", opts: ["absolute", "fixed", "relative", "sticky"], a: 4 },
+  { q: "In HTML5, which input type provides a calendar date picker by default?", opts: ["<input type='calendar'>", "<input type='date'>", "<input type='time'>", "<input type='datetime'>"], a: 2 },
+  { q: "Which HTML API allows real-time bi-directional communication between client & server?", opts: ["WebSockets", "AJAX", "Server-Sent Events", "Fetch API"], a: 1 },
+  
+  { q: "What’s the purpose of the is attribute in custom elements?", opts: ["To import JavaScript modules", "To load shadow DOM automatically", "To make <div> behave like <section>", "To extend built-in HTML elements"], a: 1},
+  { q: "What is the difference between visibility: hidden; and display: none;?", opts: ["Both remove the element fully", "visibility: hidden; hides but keeps layout space", "display: none; hides but keeps layout space", "No difference"], a: 2 },
+  { q: "Which element is used in HTML5 to display machine-readable data?", opts: ["<meta>", "<data>", "<var>", "<dfn>"], a: 2 },
+  { q: "In progressive web apps (PWAs), which HTML tag is crucial for service worker registration scope?", opts: ["<base>", "<meta>", "<noscript>", "<manifest>"], a: 4 },
+  { q: "Which attribute tells the browser that an input must be filled before submitting a form?", opts: ["validate", "required", "check", "must"], a: 2},
+  { q: "What happens if <source> tags in <picture> do not match media conditions?", opts: ["Nothing loads", "The <img> fallback is used", "The browser crashes", "The largest image loads"], a: 2 },
+  { q: "Which HTML attribute enables cross-origin resource sharing for images, e.g., <img>?", opts: ["fetch", " rel='cors'", "secure", "crossorigin"], a: 4 },
+  { q: "What is the difference between contain: content; and contain: strict;?", opts: ["strict ignores parent context", "content blocks rendering", "strict applies full isolation", "Both are identical"], a: 3 },
+  { q: "Which CSS property triggers GPU compositing for smoother animations?", opts: ["transform: translateZ(0);", "position: fixed;", "filter: blur(0);", "opacity: 1;"], a: 1 },
+  { q: "In CSS Grid, what’s the difference between auto-fill and auto-fit in repeat()?", opts: ["Neither supports responsive", "auto-fill collapses tracks", "Both mean same", "auto-fit collapses empty tracks"], a: 4 },
+  { q: "Which CSS feature allows container-based queries (instead of viewport)?", opts: ["@container", "@media", "@supports", "@scope"], a: 1 },
+  { q: "What’s the difference between minmax() and fit-content() in CSS Grid?", opts: ["minmax() defines flexible ranges", "fit-content() defines flexible ranges", "Both are identical", "fit-content() ignores grid"], a: 1 },
+  { q: "What is the difference between inline styles and CSSOM (CSS Object Model)?", opts: ["Both are same", "Inline is faster than CSSOM", "CSSOM can be modified dynamically", "CSSOM is only for <iframe>"], a: 3},
+  { q: "Which CSS pseudo-class helps when building accessible custom checkboxes?", opts: [":focus-visible", ":hover", ":checked", ":not()"], a: 1 },
+  { q: "Which property makes a flex item ignore shrinking behavior?", opts: ["flex-shrink: 0;", "align-self: stretch;", "flex-grow: 1;", "order: -1;"], a: 1 },
+  { q: "Which CSS function clamps values within a min–max range?", opts: ["fit()", "clamp()", "limit()", "scale()"], a: 2 },
+  { q: "What is the main difference between subgrid and grid in CSS?", opts: ["subgrid allows child elements to align with parent grid tracks", "Both are same", "subgrid is only for flexbox", "grid is only for inline-blocks"], a: 1 }];
+
+const TOTAL = QUESTIONS.length;
+const state = { 
+  current: 0, 
+  score: 0, 
+  answered: false, 
+  timer: null, 
+  timeLeft: 40,
+  playerName: '',
+  correctCount: 0,
+  wrongCount: 0
+};
+
+// DOM Elements
+const loginBox = document.getElementById("loginBox");
+const quizBox = document.getElementById("quizBox");
+const qIndexText = document.getElementById("qIndex");
+const questionText = document.getElementById("questionText");
+const optionsContainer = document.getElementById("options");
+const statusText = document.getElementById("statusText");
+const timerEl = document.getElementById("timer");
+const scoreEl = document.getElementById("score");
+const usernameInput = document.getElementById("username");
+const passwordInput = document.getElementById("password");
+const playerNameEl = document.getElementById("playerName");
+const playerInitialEl = document.getElementById("playerInitial");
+const nextBtn = document.getElementById("nextBtn");
+const totalQuestionsEl = document.getElementById("totalQuestions");
+const scorePercentageEl = document.getElementById("scorePercentage");
+const correctAnswersEl = document.getElementById("correctAnswers");
+const wrongAnswersEl = document.getElementById("wrongAnswers");
+const playerScoreEl = document.getElementById("playerScore");
+
+
+// Track used usernames in localStorage
+const USED_USERNAMES_KEY = 'usedUsernames';
+let usedUsernames = JSON.parse(localStorage.getItem(USED_USERNAMES_KEY) || '[]');
+
+// Function to check if username was already used
+function isUsernameUsed(username) {
+  return usedUsernames.includes(username.toLowerCase());
+}
+
+// Function to add username to used list
+function markUsernameAsUsed(username) {
+  const usernameLower = username.toLowerCase();
+  if (!usedUsernames.includes(usernameLower)) {
+    usedUsernames.push(usernameLower);
+    localStorage.setItem(USED_USERNAMES_KEY, JSON.stringify(usedUsernames));
+  }
+}
+
+// Prevent right-click and keyboard shortcuts
+window.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  return false;
+});
+
+// Prevent keyboard shortcuts (Ctrl+C, Ctrl+A, etc.)
+document.addEventListener('keydown', (e) => {
+  // Disable Ctrl+C, Ctrl+A, Ctrl+U, F12, etc.
+  if (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'a' || e.key === 'A' || e.key === 'u' || e.key === 'U') || 
+      e.key === 'F12' || 
+      (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'i' || e.key === 'j' || e.key === 'c'))) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+});
+
+// Log out user when switching tabs
+let isTabActive = true;
+
+window.addEventListener('blur', () => {
+  isTabActive = false;
+  if (document.visibilityState === 'hidden' && !document.hidden) {
+    logoutUser();
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    logoutUser();
+  }
+});
+
+function logoutUser() {
+  // Only log out if user is currently logged in
+  if (loginBox.style.display === 'none') {
+    alert('You have been logged out for switching tabs/windows.');
+    loginBox.style.display = 'flex';
+    quizBox.style.display = 'none';
+    resultBox.style.display = 'none';
+    
+    // Clear any ongoing quiz state
+    clearInterval(state.timer);
+    state.current = 0;
+    state.score = 0;
+    state.answered = false;
+    
+   
+    // Reset form but keep username for reference
+    passwordInput.value = '';
+  }
+}
+
+// Start quiz function
+function startQuiz() {
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value.trim();
+  
+  if (!username || !password) {
+    alert("Please enter both username and password");
+    return;
+  }
+   
+  // Check if username was already used
+  if (isUsernameUsed(username)) {
+    alert("This username has already been used. Please use a different username.");
+    return;
+  }
+  
+  // Mark this username as used
+  markUsernameAsUsed(username); 
+  state.playerName = username;
+  loginBox.style.display = 'none';
+  quizBox.style.display = 'flex';
+  
+  // Update player info
+  playerNameEl.textContent = username;
+  playerInitialEl.textContent = username.charAt(0).toUpperCase();
+  
+  // Set total questions
+  document.getElementById('totalQuestions').textContent = TOTAL;
+  
+  // Start the quiz
+  renderQuestion();
+}
+
+// Handle Enter key press for login
+usernameInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    // Only move to password if username is not already used
+    if (!isUsernameUsed(usernameInput.value.trim())) {
+      passwordInput.focus();
+    } else {
+      alert("This username has already been used. Please use a different username.");
+      usernameInput.focus();
+    }
+  }
+});
+
+passwordInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    startQuiz();
+  }
+});
+
+function renderQuestion() {
+  if (state.current >= TOTAL) return endQuiz();
+
+  state.answered = false;
+  statusText.textContent = "";
+  nextBtn.style.display = 'none';
+  
+  const qObj = QUESTIONS[state.current];
+  
+  qIndexText.textContent = `Q ${state.current+1} of ${TOTAL}`;
+  questionText.textContent = qObj.q;
+
+  optionsContainer.innerHTML = "";
+  qObj.opts.forEach((opt, idx) => {
+    const container = document.createElement('div');
+    container.className = 'option-container';
+    
+    const btn = document.createElement("button");
+    btn.textContent = opt;
+    btn.className = "optBtn";
+    btn.dataset.index = idx;
+    btn.onclick = onOptionClick;
+    
+    container.appendChild(btn);
+    optionsContainer.appendChild(container);
+  });
+
+  resetTimer();
+}
+
+function onOptionClick(e) {
+  if (state.answered) return;
+  state.answered = true;
+  clearInterval(state.timer);
+
+  const chosen = Number(e.target.dataset.index);
+  const correct = QUESTIONS[state.current].a;
+  const allContainers = document.querySelectorAll('.option-container');
+  const allOptions = document.querySelectorAll('.optBtn');
+  
+  // Mark correct answer in green
+  allContainers[correct].classList.add('correct');
+  
+  // If wrong answer, mark the chosen one in red
+  if (chosen !== correct) {
+    allContainers[chosen].classList.add('wrong');
+  }
+  
+  // Disable all options
+  allOptions.forEach(btn => btn.disabled = true);
+
+  // Update score and counters
+  if (chosen === correct) {
+    statusText.textContent = "✅ Correct!";
+    state.score++;
+    state.correctCount++;
+  } else {
+    statusText.textContent = `❌ Wrong! The correct answer is: ${QUESTIONS[state.current].opts[correct]}`;
+    state.wrongCount++;
+  }
+  
+  // Update the score display
+  correctAnswersEl.textContent = state.correctCount;
+  wrongAnswersEl.textContent = state.wrongCount;
+
+  // Update score display
+  const percentage = Math.round((state.score / TOTAL) * 100);
+  scoreEl.textContent = state.score;
+  scorePercentageEl.textContent = `${percentage}%`;
+  
+  // Show next button instead of auto-advancing
+  nextBtn.style.display = 'block';
+  nextBtn.focus();
+}
+
+function nextQuestion() {
+  state.current++;
+  if (state.current < TOTAL) {
+    renderQuestion();
+  } else {
+    endQuiz();
+  }
+}
+
+function updateProgressCircle(percent) {
+  const circle = document.querySelector('.progress-ring__circle');
+  const radius = circle.r.baseVal.value;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percent / 100) * circumference;
+  circle.style.strokeDasharray = `${circumference} ${circumference}`;
+  circle.style.strokeDashoffset = offset;
+}
+
+function resetTimer() {
+  state.timeLeft = 20;
+  const totalTime = 20;
+  timerEl.textContent = state.timeLeft + "s";
+  updateProgressCircle(100);
+  clearInterval(state.timer);
+  state.timer = setInterval(() => {
+    state.timeLeft--;
+    const timePercentage = (state.timeLeft / totalTime) * 100;
+    updateProgressCircle(timePercentage);
+    timerEl.textContent = state.timeLeft + "s";
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timer);
+      statusText.textContent = "⏰ Time's up!";
+      
+      // Mark the correct answer
+      const correct = QUESTIONS[state.current].a;
+      const allContainers = document.querySelectorAll('.option-container');
+      allContainers[correct].classList.add('correct');
+      
+      // Disable all options
+      document.querySelectorAll('.optBtn').forEach(btn => btn.disabled = true);
+      
+      // Show next button
+      nextBtn.style.display = 'block';
+      nextBtn.focus();
+    }
+  }, 1000);
+}
+
+function showCelebration(percentage) {
+  const modal = document.createElement('div');
+  modal.className = 'celebration-modal';
+  
+  const emojis = ['🎉', '🏆', '✨', '👏', '🥳', '🎊'];
+  const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+  
+  modal.innerHTML = `
+    <span class="celebration-emoji">${randomEmoji}</span>
+    <h2>Amazing Score!</h2>
+    <p>You scored ${percentage}%! You're a quiz master! Keep up the great work!</p>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Auto-close after 10 seconds
+  setTimeout(() => {
+    modal.style.animation = 'modalAppear 0.5s ease-out reverse';
+    setTimeout(() => modal.remove(), 500);
+  }, 10000);
+}
+
+function createConfetti() {
+  const container = document.createElement('div');
+  container.className = 'confetti-container';
+  document.body.appendChild(container);
+
+  const colors = ['#ff0', '#f0f', '#0ff', '#f80', '#8f0', '#08f'];
+  
+  for (let i = 0; i < 100; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + 'vw';
+    confetti.style.animationDelay = Math.random() * 5 + 's';
+    confetti.style.animationDuration = (Math.random() * 3 + 3) + 's';
+    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.width = (Math.random() * 10 + 5) + 'px';
+    confetti.style.height = (Math.random() * 10 + 5) + 'px';
+    container.appendChild(confetti);
+  }
+
+  setTimeout(() => {
+    container.remove();
+  }, 10000);
+}
+
+function endQuiz() {
+  clearInterval(state.timer);
+  const percentage = Math.round((state.score / TOTAL) * 100);
+  
+  // Add celebration for scores 70% or above
+  if (percentage >= 70) {
+    createConfetti();
+    showCelebration(percentage);
+  }
+  
+  // Update final counts in case any questions were skipped
+  state.correctCount = state.score;
+  state.wrongCount = TOTAL - state.score;
+  
+  // Update the quiz container to show final results
+  const quizContainer = document.querySelector('.quiz-container');
+  quizContainer.innerHTML = `
+    <div style="text-align: center; padding: 40px 20px;">
+      <h2>🎉 Quiz Completed, ${state.playerName}!</h2>
+      <div style="margin: 30px 0; display: flex; justify-content: center; gap: 40px;">
+        <div class="score-box" style="background: #e8f5e9; padding: 20px; border-radius: 10px; min-width: 150px;">
+          <div style="font-size: 14px; color: #2e7d32;">Correct</div>
+          <div style="font-size: 36px; font-weight: bold; color: #2e7d32;">${state.score}</div>
+        </div>
+        <div class="score-box" style="background: #ffebee; padding: 20px; border-radius: 10px; min-width: 150px;">
+          <div style="font-size: 14px; color: #c62828;">Wrong</div>
+          <div style="font-size: 36px; font-weight: bold; color: #c62828;">${TOTAL - state.score}</div>
+        </div>
+      </div>
+      <div style="margin: 20px 0;">
+        <div style="font-size: 48px; font-weight: bold; margin: 15px 0; color: #2c3e50;">
+          ${percentage}%
+        </div>
+        <div style="font-size: 18px; color: #666; margin-bottom: 20px;">
+          ${state.score} out of ${TOTAL} answers correct
+        </div>
+        <div style="margin: 20px 0; font-size: 20px;">
+          ${percentage >= 90 ? '🏆 Outstanding! Perfect score!' : 
+            percentage >= 80 ? '🎉 Excellent work!' : 
+            percentage >= 60 ? '👍 Good job!' : 
+            percentage >= 40 ? '👏 Not bad!' : ''}
+        </div>
+      </div>
+      <button onclick="location.reload()" class="login-btn" style="margin-top: 20px; padding: 12px 30px; font-size: 18px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s;">
+        Try Again
+      </button>
+    </div>
+  `;
+
+  nextBtn.style.display = 'none';
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
